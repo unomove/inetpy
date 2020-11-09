@@ -1,0 +1,234 @@
+{
+    "name": "inet",
+    "modules":  [
+      "//apps/spot:spot_interface_module"
+    ],
+    "config":{
+      "inet":{
+        "PyCodelet": {
+          "model_fn": "apps/spot/inetpy/models/model.h5",
+          "mode": "DLM",
+          "input_frame": "MULTI",
+          "num_control": 2,
+          "num_intentions": 3
+        }
+      },
+      "spot":{
+        "spot_interface":{
+            "tick_period": "20Hz",
+            "max_velocity_magnitude_range": 0.7
+        }
+      },
+      "commander.joystick": {
+        "isaac.Joystick": {
+          "device": "/dev/input/js0"
+        }
+      },
+      "commander.robot_remote": {
+        "isaac.navigation.RobotRemoteControl": {
+          "linear_speed_max": 0.7,
+          "angular_speed_max": 0.7
+        }
+      },
+      "left_d435i.camera":{
+        "realsense" : {
+           "serial_number": "017322070731"
+        }
+      },
+      "mid_d435i.camera":{
+        "realsense" : {
+           "serial_number": "021222071685"
+        }
+      },
+      "right_d435i.camera":{
+        "realsense" : {
+           "serial_number": "021222071707"
+        }
+      },
+      "record.interface":{
+        "input": {
+          "base_directory": "/data",
+          "tag": "demo",
+          "start_recording_automatically": false
+        }
+      },
+      "websight": {
+        "WebsightServer": {
+          "port": 3000,
+          "ui_config": {
+            "windows": {
+
+              "Spot Control": {
+                "renderer": "2d",
+                "dims": {
+                  "width":256,
+                  "height":256
+                },
+                "channels": [
+                  { "name": "inet/spot/spot_interface/Control" }
+                ]
+              },
+
+              "Spot Plot": {
+                "renderer": "plot",
+                "dims": {
+                  "width":256,
+                  "height":256
+                },
+                "channels": [
+                  {"name": "inet/spot/spot_interface/linear speed"},
+                  {"name": "inet/spot/spot_interface/angular speed"},
+                  {"name": "inet/spot/spot_interface/intention"}
+                ]
+              },
+
+              "Realsense Left - Color": {
+                "renderer": "2d",
+                "dims": {
+                  "width": 640,
+                  "height": 360
+                },
+                "channels": [
+                    {"name": "inet/left_d435i.camera/realsense/jpeg"},
+                    {"name": "inet/left_d435i.camera/realsense/jpeg_depth"}
+                ]
+              },
+
+              "Realsense Mid - Color": {
+                "renderer": "2d",
+                "dims": {
+                  "width": 640,
+                  "height": 360
+                },
+                "channels": [
+                  {"name": "inet/mid_d435i.camera/realsense/jpeg"},
+                  {"name": "inet/mid_d435i.camera/realsense/jpeg_depth"}
+                ]
+              },
+
+              "Realsense Right - Color": {
+                "renderer": "2d",
+                "dims": {
+                  "width": 640,
+                  "height": 360
+                },
+                "channels": [
+                  {"name": "inet/right_d435i.camera/realsense/jpeg"},
+                  {"name": "inet/right_d435i.camera/realsense/jpeg_depth"}
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "graph": {
+      "nodes": [
+        {
+            "name": "inet",
+            "components": [
+              {
+                "name": "message_ledger",
+                "type": "isaac::alice::MessageLedger"
+              }
+            ]
+        },
+        {
+          "name": "left_d435i",
+          "subgraph": "apps/spot/subgraphs/d435i.subgraph.json"
+        },
+        {
+          "name": "mid_d435i",
+          "subgraph": "apps/spot/subgraphs/d435i.subgraph.json"
+        },
+        {
+          "name": "right_d435i",
+          "subgraph": "apps/spot/subgraphs/d435i.subgraph.json"
+        },
+        {
+          "name": "record",
+          "subgraph": "packages/record_replay/apps/record.subgraph.json"
+        },
+        {
+          "name": "commander",
+          "subgraph": "packages/navigation/apps/differential_base_commander.subgraph.json"
+        },
+        {
+          "name": "imu_odometry",
+          "subgraph": "packages/navigation/apps/differential_base_imu_odometry.subgraph.json"
+        },
+        {
+          "name": "spot",
+          "components": [
+            {
+              "name" : "message_ledger",
+              "type" : "isaac::alice::MessageLedger"
+            },
+            {
+              "name": "spot_interface",
+              "type" : "Spot_interface"
+            }
+          ]
+        }
+      ],
+      "edges":[
+        {
+          "source": "left_d435i.camera/realsense/compress_depth",
+          "target": "record.interface/input/left_depth"
+        },
+        {
+          "source": "left_d435i.camera/realsense/color",
+          "target": "record.interface/input/left_color"
+        },
+        {
+          "source": "mid_d435i.camera/realsense/compress_depth",
+          "target": "record.interface/input/mid_depth"
+        },
+        {
+          "source": "mid_d435i.camera/realsense/color",
+          "target": "record.interface/input/mid_color"
+        },
+        {
+          "source": "right_d435i.camera/realsense/compress_depth",
+          "target": "record.interface/input/right_depth"
+        },
+        {
+          "source": "right_d435i.camera/realsense/color",
+          "target": "record.interface/input/right_color"
+        },
+        {
+          "source": "spot/spot_interface/state",
+          "target": "record.interface/input/state"
+        },
+        {
+          "source": "spot/spot_interface/spot_odom",
+          "target": "record.interface/input/spot_odom"
+        },
+        {
+          "source": "spot/spot_interface/intention_control",
+          "target": "record.interface/input/intention_control"
+        },
+        {
+          "source": "commander.subgraph/interface/command",
+          "target": "spot/spot_interface/cmd_vel"
+        },
+        {
+          "source": "commander.subgraph/interface/joystick",
+          "target": "spot/spot_interface/js_state"
+        },
+        {
+          "source": "spot/spot_interface/linear speed",
+          "target": "record.interface/input/linear_speed"
+        },
+        {
+          "source": "spot/spot_interface/angular speed",
+          "target": "record.interface/input/angular_speed"
+        },
+        {
+          "source": "spot/spot_interface/intention",
+          "target": "record.interface/input/intention"
+        }
+      ]
+    }
+  }
+  
