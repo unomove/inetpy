@@ -1,13 +1,3 @@
-'''
-Copyright (c) 2019, NVIDIA CORPORATION. All rights reserved.
-
-NVIDIA CORPORATION and its licensors retain all intellectual property
-and proprietary rights in and to this software, related documentation
-and any modifications thereto. Any use, reproduction, disclosure or
-distribution of this software and related documentation without an express
-license agreement from NVIDIA CORPORATION is strictly prohibited.
-'''
-
 from engine.pyalice import *
 
 import os
@@ -23,12 +13,9 @@ from net import IntentionNet
 from dataset import preprocess_input
 from PIL import Image
 
-# A Python codelet for proportional control
+# A Python codelet for inet control
 # For comparison, please see the same logic in C++ at "PingCpp.cpp".
-#
-# We receive odometry information, from which we extract the x position. Then, using refence and
-# gain parameters that are provided by the user, we compute and publish a linear speed command
-# using `control = gain * (reference - position)`
+
 class INETPython(Codelet):
     def start(self):
         # This part will be run once in the beginning of the program
@@ -115,7 +102,7 @@ class INETPython(Codelet):
         tx_message = self.tx.init()
         data = tx_message.proto.init('data', 2)
         data[0] = cmd_vel[0]   # linear speed
-        data[1] = cmd_vel[1]    # This simple example sets zero angular speed
+        data[1] = cmd_vel[1]    # angular speed
         self.tx.publish()
 
 def main():
