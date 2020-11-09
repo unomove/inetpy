@@ -14,7 +14,7 @@ from dataset import preprocess_input
 from PIL import Image
 
 # A Python codelet for inet control
-# For comparison, please see the same logic in C++ at "PingCpp.cpp".
+# For comparison, please see the same logic in C++.
 
 class INETPython(Codelet):
     def start(self):
@@ -93,10 +93,10 @@ class INETPython(Codelet):
         nl = left.resize(input_size)
         mid = Image.fromarray(latest_mid.tensor)
         nm = mid.resize(input_size)
-        right = image.fromarray(latest_right.tensor)
+        right = Image.fromarray(latest_right.tensor)
         nr = right.resize(input_size)
 
-        cmd_vel = self.predict_cmd([left, mid, right], intention)
+        cmd_vel = self.predict_cmd([nl, nm, nr], intention)
         print ("cmd vel", cmd_vel)
 
         tx_message = self.tx.init()
