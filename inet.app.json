@@ -16,7 +16,8 @@
       "spot":{
         "spot_interface":{
             "tick_period": "20Hz",
-            "max_velocity_magnitude_range": 0.7
+            "max_velocity_magnitude_range": 0.7,
+            "max_angular_magnitude_range": 0.7
         }
       },
       "commander.joystick": {

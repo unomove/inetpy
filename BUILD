@@ -9,6 +9,12 @@ license agreement from NVIDIA CORPORATION is strictly prohibited.
 """
 load("//engine/build:isaac.bzl", "isaac_py_app")
 
+filegroup(
+    name = "pys",
+    srcs = glob(["*.py"]),
+    visibility = ["//visibility:public"],
+)
+
 isaac_py_app(
     name = "inet",
     srcs = [
@@ -16,6 +22,7 @@ isaac_py_app(
         "inet.py",
     ],
     data = [
+        "//apps/spot/inetpy:pys",
         "//apps:py_init",
         "//apps/spot/inetpy/models",
         "//apps/spot/subgraphs:d435i_subgraph",

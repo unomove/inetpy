@@ -11,7 +11,8 @@ import keras.backend.tensorflow_backend as KTF
 
 from net import IntentionNet
 from dataset import preprocess_input
-from PIL import Image
+from dataset import PioneerDataset as Dataset
+import cv2
 
 # A Python codelet for inet control
 # For comparison, please see the same logic in C++.
@@ -62,7 +63,7 @@ class INETPython(Codelet):
         elif self.input_frame == 'MULTI':
             pred_control = self.model.predict(rgb+[i_intention])
 
-        return pred_control
+        return pred_control[0]
 
     def tick(self):
         rx_intention_msg = self.rx_intention.message
@@ -83,36 +84,39 @@ class INETPython(Codelet):
         if rx_right_msg is not None:
             latest_right = rx_right_msg
 
-        if latest_intention is None and latest_left is None and latest_right is None and latest_mid is None:
+        if latest_left is None or latest_right is None or latest_mid is None:
+            print ('realsense messages are not there')
             return
 
-        intention = int(latest_intention.proto.z)
+        if latest_intention is None:
+            # default forward
+            intention = 0 
+        else:
+            intention = int(latest_intention.proto.z)
 
         input_size = (224, 224)
-        left = Image.fromarray(latest_left.tensor)
-        nl = left.resize(input_size)
-        mid = Image.fromarray(latest_mid.tensor)
-        nm = mid.resize(input_size)
-        right = Image.fromarray(latest_right.tensor)
-        nr = right.resize(input_size)
+        left = cv2.resize(latest_left.tensor, input_size)
+        mid = cv2.resize(latest_mid.tensor, input_size)
+        right = cv2.resize(latest_right.tensor, input_size)
 
-        cmd_vel = self.predict_cmd([nl, nm, nr], intention)
-        print ("cmd vel", cmd_vel)
+        # cmd_vel = self.predict_cmd([left, mid, right], intention)
+        cmd_vel = self.predict_cmd([right, mid, left], intention)
 
         tx_message = self.tx.init()
         data = tx_message.proto.init('data', 2)
-        data[0] = cmd_vel[0]   # linear speed
-        data[1] = cmd_vel[1]    # angular speed
+        data[0] = float(cmd_vel[0]*Dataset.SCALE_VEL)   # linear speed
+        data[1] = float(cmd_vel[1]*Dataset.SCALE_STEER)   # angular speed
+        # print ("cmd vel", data)
         self.tx.publish()
 
 def main():
     app = Application(app_filename="apps/spot/inetpy/inet.app.json")
     app.nodes["inet"].add(INETPython)
-    app.connect('left_d435i.camera/realsense', 'color',
+    app.connect('left_d435i.camera/realsense', 'color_raw',
                 'inet/PyCodelet', 'left')
-    app.connect('mid_d435i.camera/realsense', 'color',
+    app.connect('mid_d435i.camera/realsense', 'color_raw',
                 'inet/PyCodelet', 'mid')
-    app.connect('right_d435i.camera/realsense', 'color',
+    app.connect('right_d435i.camera/realsense', 'color_raw',
                 'inet/PyCodelet', 'right')
     app.connect('inet/PyCodelet', 'cmd_vel', 'commander.subgraph/interface',
                 'control')
