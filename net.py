@@ -40,8 +40,8 @@ def FeatModel():
     oup = layer_dict['avg_pool'].output
     return Model(inputs=inp, outputs=oup)
 
-def IntentionNet(mode, input_frame, num_control, num_intentions=-1,use_side_model=True):
-    print (f'Intention Mode {mode} Input frame {input_frame}')
+def IntentionNet(mode, input_frame, num_control, num_intentions=-1,use_shared_side_model=False):
+    #print (f'Intention Mode {mode} Input frame {input_frame}')
     # model
     feat_model = FeatModel()
     
@@ -54,15 +54,20 @@ def IntentionNet(mode, input_frame, num_control, num_intentions=-1,use_side_mode
         rgbm_input = Input(shape=(224, 224, 3))
         rgbr_input = Input(shape=(224, 224, 3))
         
-        if use_side_model: #use different model for side view
+        if use_shared_side_model: #use different model for side view
             side_feat_model = FeatModel()
             rgbl_feat = side_feat_model(rgbl_input)
             rgbm_feat = feat_model(rgbm_input)
             rgbr_feat = side_feat_model(rgbr_input)
         else:
-            rgbl_feat = feat_model(rgbl_input)
+            # rgbl_feat = feat_model(rgbl_input)
+            # rgbm_feat = feat_model(rgbm_input)
+            # rgbr_feat = feat_model(rgbr_input)
+            l_side_feat_model = FeatModel()
+            r_side_feat_model = FeatModel()
+            rgbl_feat = l_side_feat_model(rgbl_input)
             rgbm_feat = feat_model(rgbm_input)
-            rgbr_feat = feat_model(rgbr_input)
+            rgbr_feat = r_side_feat_model(rgbr_input)
 
         rgbl_feat = Dropout(DROPOUT)(rgbl_feat)
         rgbl_feat = Dense(512,kernel_initializer=INIT,kernel_regularizer=l2(L2),activation='relu')(rgbl_feat)
@@ -87,8 +92,8 @@ def IntentionNet(mode, input_frame, num_control, num_intentions=-1,use_side_mode
         outs = []
         for i in range(num_intentions):
             out = Dropout(DROPOUT)(feat)
-            #out = Dense(1024, kernel_initializer=INIT, kernel_regularizer=l2(L2), activation='relu')(out)
-            #out = Dropout(DROPOUT)(out)
+            out = Dense(1024, kernel_initializer=INIT, kernel_regularizer=l2(L2), activation='relu')(out) # Edited by Wei
+            out = Dropout(DROPOUT)(out)
             out = Dense(num_control, kernel_initializer=INIT, kernel_regularizer=l2(L2))(out)
             outs.append(out)
         outs.append(intention_input)

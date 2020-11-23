@@ -72,8 +72,8 @@ class PioneerDataset(BaseDataset):
     NUM_CONTROL = 2
 
     # use to normalize regression data
-    SCALE_VEL = 0.5
-    SCALE_STEER = 0.5
+    SCALE_VEL = 1.0 #0.5
+    SCALE_STEER = 1.0
 
     def __init__(self, data_dir, batch_size, num_intentions, mode, target_size=(224, 224), shuffle=False, max_samples=None, preprocess=True, input_frame='NORMAL'):
         super().__init__(data_dir, batch_size, num_intentions, mode, target_size, shuffle, max_samples, preprocess, input_frame)

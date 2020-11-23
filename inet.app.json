@@ -6,11 +6,13 @@
     "config":{
       "inet":{
         "PyCodelet": {
-          "model_fn": "apps/spot/inetpy/models/model.h5",
+          "model_fn": "apps/spot/inetpy/models/MULTI_DLM_best_model_prev.h5",
           "mode": "DLM",
           "input_frame": "MULTI",
+          "use_shared_side_model": false,
           "num_control": 2,
-          "num_intentions": 3
+          "num_intentions": 3,
+          "auto": true
         }
       },
       "spot":{
@@ -22,7 +24,8 @@
       },
       "commander.joystick": {
         "isaac.Joystick": {
-          "device": "/dev/input/js0"
+          "device": "/dev/input/js0",
+          "num_axes": 2
         }
       },
       "commander.robot_remote": {
@@ -80,42 +83,6 @@
                   {"name": "inet/spot/spot_interface/linear speed"},
                   {"name": "inet/spot/spot_interface/angular speed"},
                   {"name": "inet/spot/spot_interface/intention"}
-                ]
-              },
-
-              "Realsense Left - Color": {
-                "renderer": "2d",
-                "dims": {
-                  "width": 640,
-                  "height": 360
-                },
-                "channels": [
-                    {"name": "inet/left_d435i.camera/realsense/jpeg"},
-                    {"name": "inet/left_d435i.camera/realsense/jpeg_depth"}
-                ]
-              },
-
-              "Realsense Mid - Color": {
-                "renderer": "2d",
-                "dims": {
-                  "width": 640,
-                  "height": 360
-                },
-                "channels": [
-                  {"name": "inet/mid_d435i.camera/realsense/jpeg"},
-                  {"name": "inet/mid_d435i.camera/realsense/jpeg_depth"}
-                ]
-              },
-
-              "Realsense Right - Color": {
-                "renderer": "2d",
-                "dims": {
-                  "width": 640,
-                  "height": 360
-                },
-                "channels": [
-                  {"name": "inet/right_d435i.camera/realsense/jpeg"},
-                  {"name": "inet/right_d435i.camera/realsense/jpeg_depth"}
                 ]
               }
             }

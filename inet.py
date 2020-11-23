@@ -34,18 +34,21 @@ class INETPython(Codelet):
         self.input_frame = self.config['input_frame']
         self.num_control = self.config['num_control']
         self.num_intentions = self.config['num_intentions']
+        self.use_shared_side_model = self.config["use_shared_side_model"]
+        self.auto = self.config["auto"]
         # set keras session
         config_gpu = tf.ConfigProto()
         config_gpu.gpu_options.allow_growth = True
         config_gpu.gpu_options.per_process_gpu_memory_fraction=0.8
         KTF.set_session(tf.Session(config=config_gpu))
 
-        # load model
-        model = IntentionNet(self.mode, self.input_frame, self.num_control, self.num_intentions)
-        # load checkpoint
-        model.load_weights(model_fn)
-        print ("=> loaded checkpoint '{}'".format(model_fn))
-        self.model = model
+        if self.auto:
+            # load model
+            model = IntentionNet(self.mode, self.input_frame, self.num_control, self.num_intentions, self.use_shared_side_model)
+            # load checkpoint
+            model.load_weights(model_fn)
+            print ("=> loaded checkpoint '{}'".format(model_fn))
+            self.model = model
 
     def predict_cmd(self, image, intention):
         if self.input_frame == 'MULTI':
@@ -66,6 +69,9 @@ class INETPython(Codelet):
         return pred_control[0]
 
     def tick(self):
+        if not self.auto:
+            return
+
         rx_intention_msg = self.rx_intention.message
         rx_left_msg = self.rx_left.message
         rx_mid_msg = self.rx_mid.message
@@ -96,8 +102,11 @@ class INETPython(Codelet):
 
         input_size = (224, 224)
         left = cv2.resize(latest_left.tensor, input_size)
+        left = cv2.cvtColor(left, cv2.COLOR_BGR2RGB)
         mid = cv2.resize(latest_mid.tensor, input_size)
+        mid = cv2.cvtColor(mid, cv2.COLOR_BGR2RGB)
         right = cv2.resize(latest_right.tensor, input_size)
+        right = cv2.cvtColor(right, cv2.COLOR_BGR2RGB)
 
         # cmd_vel = self.predict_cmd([left, mid, right], intention)
         cmd_vel = self.predict_cmd([right, mid, left], intention)
